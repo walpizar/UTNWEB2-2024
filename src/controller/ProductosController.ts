@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { Productos } from "../entity/Productos";
 import { resolveObjectURL } from "buffer";
+import { ValidationError, validate } from "class-validator";
 
 class ProductosController{
 
@@ -35,7 +36,7 @@ class ProductosController{
             //destructuring
             const {id,nombre, precio, stock, categoria}= req.body;
 
-            //validr datos
+           /* //validr datos
             if(!id){
                 return res.status(400).json({message:"Debe indicar un id del producto."})
             }
@@ -50,8 +51,9 @@ class ProductosController{
             }
             if(!categoria){
                 return res.status(400).json({message:"Debe indicar la categoria del producto."})
-            }
+            }*/
 
+      
             //reglas de negocio
 
             //valalir si el procudto ya existe
@@ -61,10 +63,10 @@ class ProductosController{
             if(product){
                 return res.status(400).json({message:"Ese producto ya existe en la base datos."})
             }
-
+/*
             if(stock<=0){
                 return res.status(400).json({message:"El stock debe ser mayor a 0."})
-            }
+            }*/
 
             //instanacia del objeto 
             product = new Productos;
@@ -75,6 +77,15 @@ class ProductosController{
             product.categoria=categoria;
             product.stock=stock;
             product.estado=true;
+
+            //validacion con class validator
+            const validateOpt= {ValidationError:{target:false, value:false}};
+            const errors= await validate(product,{validationError:{target:false, value:false}});
+
+            if(errors.length>0){
+                return res.status(400).json(errors);
+
+            }
 
 
            await repoProducto.save(product);  
@@ -112,6 +123,95 @@ class ProductosController{
         }
 
     }
+
+    static update= async(req: Request, res:Response)=>{
+
+        try {
+            const repo= AppDataSource.getRepository(Productos);
+
+            const id = parseInt(req.params['id']);
+            //destructuracion
+            const {nombre, precio, stock, categoria}= req.body;
+          
+         //valido si existe en la base datos
+            let producto;
+            try {
+                producto = await repo.findOneOrFail({where:{id}});  
+         
+            } catch (error) {
+                return res.status(404).json({message:"El producto con el ID indcado no existe en el base de datos."})
+            }
+
+            //valiado datos de entrada obligatorios
+            if(!nombre){
+                return res.status(400).json({message:"Debe indicar el nombre del producto."})
+            }
+            if(!precio){
+                return res.status(400).json({message:"Debe indicar el precio del producto."})
+            }
+            if(!stock){
+                return res.status(400).json({message:"Debe indicar el stock del producto."})
+            }
+            if(!categoria){
+                return res.status(400).json({message:"Debe indicar la categoria del producto."})
+            }
+
+
+            //volcado de datos
+            producto.nombre= nombre;
+            producto.precio=precio;
+            producto.categoria=categoria;
+            producto.stock=stock;
+
+            //modifico
+            await repo.save(producto);
+            //retorno mensaje de modificado OK.      
+            return res.status(200).json({message:"El producto ha sido modificado."});
+     
+
+        } catch (error) {
+            return res.status(404).json({message:"Error al actualizar el producto."})
+           
+        }
+
+    }
+    static delete= async(req: Request, res:Response)=>{
+
+        try {
+            const id = parseInt(req.params['id']);
+
+            //validacion de mas, por lo que vimos en clase.
+            if(!id){
+                return res.status(400).json({message:"Debe indicar el ID"})
+            }
+
+            const repo= AppDataSource.getRepository(Productos);
+
+
+            let producto;
+            try {
+                producto= await repo.findOneOrFail({where:{id}});
+                
+              } catch (error) {
+                return res.status(404).json({message:"El producto con el ID indcado no existe en el base de datos."})
+            }
+
+            //modificacion
+          
+            producto.estado=false;
+            await repo.save(producto);  
+            return res.status(200).json({message:"El producto ha sido eliminado."});
+     
+
+        } catch (error) {
+            return res.status(404).json({message:"Error al eliminar el producto."})
+           
+        }
+
+    }
+
+
+
 
 
 
