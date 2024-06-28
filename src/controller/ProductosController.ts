@@ -109,7 +109,7 @@ class ProductosController{
             const repo= AppDataSource.getRepository(Productos);
 
             try {
-                const producto= await repo.findOneOrFail({where:{id}});  
+                const producto= await repo.findOneOrFail({where:{id, estado:true}});  
                 return res.status(200).json(producto);
             } catch (error) {
                 return res.status(404).json({message:"El producto con el ID indcado no existe en el base de datos."})
@@ -142,7 +142,7 @@ class ProductosController{
                 return res.status(404).json({message:"El producto con el ID indcado no existe en el base de datos."})
             }
 
-            //valiado datos de entrada obligatorios
+          /*  //valiado datos de entrada obligatorios
             if(!nombre){
                 return res.status(400).json({message:"Debe indicar el nombre del producto."})
             }
@@ -154,7 +154,7 @@ class ProductosController{
             }
             if(!categoria){
                 return res.status(400).json({message:"Debe indicar la categoria del producto."})
-            }
+            }*/
 
 
             //volcado de datos
@@ -163,6 +163,10 @@ class ProductosController{
             producto.categoria=categoria;
             producto.stock=stock;
 
+             //validacion con class validator
+           
+             const errors= await validate(producto,{validationError:{target:false, value:false}});
+ 
             //modifico
             await repo.save(producto);
             //retorno mensaje de modificado OK.      

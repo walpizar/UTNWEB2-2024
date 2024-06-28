@@ -1,6 +1,7 @@
 
 import { IsNotEmpty, IsNumber, IsPositive, MaxLength, isPositive } from "class-validator";
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Categoria } from "./Categoria";
 
 @Entity()
 export class Productos{
@@ -20,9 +21,11 @@ export class Productos{
     @IsPositive({message:'Debe indicar un valor positivo'})
     @IsNotEmpty({message:'Debe indicar el stock.'})  
     stock:number;
-    @Column()
+    
     @IsNotEmpty({message:'Debe indicar la categoria.'})  
-    categoria: number;
+    @ManyToOne(()=>Categoria, (categoria)=> categoria.Productos)   
+    categoria: Categoria;
+
     @Column({default:1})
     estado: boolean;
 
