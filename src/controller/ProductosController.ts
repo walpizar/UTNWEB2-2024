@@ -3,6 +3,7 @@ import { AppDataSource } from "../data-source";
 import { Productos } from "../entity/Productos";
 import { resolveObjectURL } from "buffer";
 import { ValidationError, validate } from "class-validator";
+import { Categoria } from "../entity/Categoria";
 
 class ProductosController{
 
@@ -13,7 +14,7 @@ class ProductosController{
         //instancia bd
          const repo= AppDataSource.getRepository(Productos);
          //consulta de bd x metodo find
-         const listaProductos= await repo.find({where:{estado:true}});
+         const listaProductos= await repo.find({where:{estado:true}, relations:{categoria:true}});
 
         // valido si trajo datos, sino devuelvo error
          if(listaProductos.length==0){
@@ -63,6 +64,8 @@ class ProductosController{
             if(product){
                 return res.status(400).json({message:"Ese producto ya existe en la base datos."})
             }
+
+            
 /*
             if(stock<=0){
                 return res.status(400).json({message:"El stock debe ser mayor a 0."})
@@ -87,6 +90,16 @@ class ProductosController{
 
             }
 
+            //VALIDO LA CATEGORIA
+            const repoCategoria =  AppDataSource.getRepository(Categoria);
+            let cat;
+            try {
+              cat= await repoCategoria.findOneOrFail({where:{id:categoria}})
+                
+            } catch (ex) {
+                return res.status(400).json({messsage:"No existe la categoria."})
+            }
+           product.categoria= cat;
 
            await repoProducto.save(product);  
            
@@ -109,7 +122,7 @@ class ProductosController{
             const repo= AppDataSource.getRepository(Productos);
 
             try {
-                const producto= await repo.findOneOrFail({where:{id, estado:true}});  
+                const producto= await repo.findOneOrFail({where:{id, estado:true}, relations:{categoria:true}});  
                 return res.status(200).json(producto);
             } catch (error) {
                 return res.status(404).json({message:"El producto con el ID indcado no existe en el base de datos."})
@@ -167,6 +180,20 @@ class ProductosController{
            
              const errors= await validate(producto,{validationError:{target:false, value:false}});
  
+
+             //VALIDO LA CATEGORIA
+            const repoCategoria =  AppDataSource.getRepository(Categoria);
+            let cat;
+            try {
+              cat= await repoCategoria.findOneOrFail({where:{id:categoria}})
+                
+            } catch (ex) {
+                return res.status(400).json({messsage:"No existe la categoria."})
+            }
+           producto.categoria= cat;
+
+
+
             //modifico
             await repo.save(producto);
             //retorno mensaje de modificado OK.      
