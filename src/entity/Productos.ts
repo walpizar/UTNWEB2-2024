@@ -2,6 +2,7 @@
 import { IsNotEmpty, IsNumber, IsPositive, MaxLength, isPositive } from "class-validator";
 import { Column, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { Categoria } from "./Categoria";
+import { Proveedor } from "./Proveedor";
 
 @Entity()
 export class Productos{
@@ -29,10 +30,7 @@ export class Productos{
     @Column({default:1})
     estado: boolean;
 
-
-
-
-
-
+    @ManyToOne(()=>Proveedor, (proveedor)=> proveedor.productos)
+    proveedor: Proveedor
     
 }
